@@ -22,7 +22,9 @@ library(ggplot2)
 ############################################################
 
 setwd("c:\\")
-pedMapDirectory <- "C:/Users/H/Desktop/RttPEDMAP/cgaTOH_IGEVET/PEDMAPs-by-Chr/RttPEDMAP-v6-H-by-Chr"
+
+setwd("c:\\Hernan\\Por-Usuario\\SebaDP\\cgaTOH\\ROHs_cabras1Megagap")
+pedMapDirectory <- "c:\\Hernan\\Por-Usuario\\SebaDP\\cgaTOH\\PEDMAPs-by-Chr"
 rawIDsFilename <- "Raw_IDs.txt"
 fPEDFilename <- "Fped.txt"
 cgaTOHOutfileRegex <- "[0-9]{1,2}_[0-9]{1}_[0-9]{7,8}_[0]_[0-1]"
@@ -136,13 +138,20 @@ crom_sample_sum <- lapply(
         sum(x[[3]])))
 
 #En caso de querer estimar un FROH parcial XX hay que reemplazar "crom_sample_df" por "crom_sample_dfXX"
-sumcrom = rbindlist(crom_sample_sum, fill=TRUE)
+sumcrom <- rbindlist(crom_sample_sum, fill = TRUE)
 sumcrom[is.na(sumcrom)] <- 0
-sumcrom = as.data.frame(sumcrom)
-rownames(sumcrom) = c("01","10","11","12","13","14","15","16","17","18","19","02","20","21","22","23","24","25","26","27","28","29","03","04","05","06","07","08","09")
-sumcrom = sumcrom[
+sumcrom <- as.data.frame(sumcrom)
+
+chrArray <- sapply (
+    seq(1,maxChr), 
+    function (x)
+      sprintf("%02.0f", x))
+rownames(sumcrom) <- chrArray
+
+sumcrom <- sumcrom[
   mixedsort(
-    rownames(sumcrom)), mixedsort(colnames(sumcrom)) ]
+    rownames(sumcrom)), 
+    mixedsort(colnames(sumcrom)) ]
 
 # sumcrom = cbind(sumcromH, sumcromL)
 # cLengths = seqlengths(BSgenome.Btaurus.UCSC.bosTau8)
@@ -163,14 +172,16 @@ fROHSxChr <- sapply(
   function(x) 
     x / cLengths[1:maxChr])
 
-fROHSxChr = t(fROHSxChr)
-fROHSxChr = as.data.frame(fROHSxChr)
-colnames(fROHSxChr) = c(1:maxChr)
+fROHSxChr <- t(fROHSxChr)
+fROHSxChr <- as.data.frame(fROHSxChr)
+colnames(fROHSxChr) <- c(1:maxChr)
 
-fROHSxChr$Group <- c(rep("MD",ncol(sumcrom)))
+" Assign group name to first column"
+fROHSxChr$Group <- c(rep("MD", ncol(sumcrom)))
+" Assign sample names to second column "
 fROHSxChr$Sample <- rownames(fROHSxChr)
 
-fROHSxChr = melt(fROHSxChr, id.vars=c("Group", "Sample"))
+fROHSxChr = melt(fROHSxChr, id.vars = c("Group", "Sample"))
 colnames(fROHSxChr) = c("Group","Sample","Chromosome","FROH")
 
 ###########################################################
@@ -195,12 +206,12 @@ ggplot(
 
 #Para obtener los FROH de la longitud que hayamos especificado en crom_sample_df"XX"
 sums <- colSums(sumcrom)
-sLength <- sum(as.numeric(cLenghts [1:maxChr]))
-FROHs = sums / sLength
-FROHs = FROHs[order(names(FROHs))]
+sLength <- sum(as.numeric(cLengths[1:maxChr]))
+FROHs <- sums / sLength
+FROHs <- FROHs[order(names(FROHs))]
 FROHs
 
-IDs = read.table(rawIDsFilename, header = T, stringsAsFactors = F)
+IDs <- read.table(rawIDsFilename, header = T, stringsAsFactors = F)
 FPeds = read.table(fPEDFilename, header = T, stringsAsFactors = F)
 
 IDPeds = merge(IDs, FPeds, by.x="Lab", by.y="Sample")
